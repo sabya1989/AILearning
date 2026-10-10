@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Champion Learning Plan — Architecture Advisor</title>
+  <style>
+    /* ── Reset & Variables ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #EFF3F8;
+      --card-bg: #FFFFFF;
+      --text: #1A2533;
+      --muted: #6B7A8D;
+      --border: #D5DDE8;
+      --header-bg: #0C3B6E;
+      --header-accent: #1A6FD8;
+      --success-bg: #EBF8F1;
+      --success-border: #86CEAB;
+      --success-text: #1A5C38;
+      --progress-track: rgba(255,255,255,0.22);
+      --progress-fill-start: #36D68B;
+      --progress-fill-end: #00C4AE;
+      --shadow: 0 2px 12px rgba(0,0,0,0.09);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    /* ── Sticky Header ─────────────────────────────────────── */
+    #header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--header-bg);
+      box-shadow: 0 3px 16px rgba(0,0,0,0.25);
+    }
+
+    .header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 14px 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #1A6FD8, #00C4AE);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      color: #FFFFFF;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .brand-sub {
+      color: rgba(255,255,255,0.65);
+      font-size: 11.5px;
+      margin-top: 2px;
+      letter-spacing: 0.2px;
+    }
+
+    .header-stats {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .stat-pill {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 20px;
+      padding: 6px 14px;
+      color: white;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .stat-pill strong { font-size: 16px; }
+
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-label {
+      color: rgba(255,255,255,0.75);
+      font-size: 12px;
+      white-space: nowrap;
+      min-width: 110px;
+    }
+
+    .prog-track {
+      flex: 1;
+      height: 9px;
+      background: var(--progress-track);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .prog-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--progress-fill-start), var(--progress-fill-end));
+      border-radius: 6px;
+      transition: width 0.55s cubic-bezier(.4,0,.2,1);
+    }
+
+    .prog-pct {
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 700;
+      min-width: 38px;
+      text-align: right;
+    }
+
+    /* ── Main Layout ────────────────────────────────────────── */
+    main {
+      max-width: 1120px;
+      margin: 28px auto 16px;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    /* ── Week Card ──────────────────────────────────────────── */
+    .week-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .week-header {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .week-header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .week-num-badge {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.18);
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      color: #FFFFFF;
+      flex-shrink: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .week-label { color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+    .week-title { color: #FFFFFF; font-size: 16px; font-weight: 700; margin-top: 2px; }
+
+    .week-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .week-done-badge {
+      background: rgba(255,255,255,0.18);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .week-mini-track {
+      width: 120px; height: 5px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .week-mini-fill {
+      height: 100%;
+      width: 0%;
+      background: rgba(255,255,255,0.8);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── Goal Strip ─────────────────────────────────────────── */
+    .goal-strip {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 18px;
+      margin: 16px 22px 0;
+      border-radius: 9px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .goal-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .goal-text strong { font-weight: 600; }
+
+    /* ── Week Body ───────────────────────────────────────────── */
+    .week-body { padding: 6px 22px 20px; }
+
+    /* ── Day Section ────────────────────────────────────────── */
+    .day-section { margin-top: 18px; }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    .day-pill {
+      padding: 3px 11px;
+      border-radius: 11px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 0.2px;
+    }
+
+    .day-weekday {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .day-total-time {
+      margin-left: auto;
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+
+    /* ── Activity Row ────────────────────────────────────────── */
+    .activity-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      margin-bottom: 6px;
+      border-radius: 9px;
+      border: 1.5px solid var(--border);
+      background: #FAFBFD;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .activity-row:hover {
+      border-color: #B0C8E8;
+      background: #F0F6FF;
+      box-shadow: 0 3px 8px rgba(26,111,216,0.08);
+      transform: translateY(-1px);
+    }
+
+    .activity-row:active { transform: translateY(0); }
+
+    .activity-row.done {
+      background: #F0FBF4;
+      border-color: var(--success-border);
+    }
+
+    .activity-row.done:hover {
+      background: #E5F7ED;
+      border-color: #68BF94;
+    }
+
+    /* ── Custom Checkbox ─────────────────────────────────────── */
+    .cb {
+      width: 23px; height: 23px;
+      flex-shrink: 0;
+      border-radius: 6px;
+      border: 2px solid #C5D3DF;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, border-color 0.2s;
+      background: white;
+    }
+
+    .activity-row:hover .cb {
+      border-color: #7AADDC;
+    }
+
+    .activity-row.done .cb {
+      background: var(--success-text);
+      border-color: var(--success-text);
+    }
+
+    .cb-tick {
+      display: none;
+      color: white;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .activity-row.done .cb-tick { display: block; }
+
+    /* ── Activity Info ───────────────────────────────────────── */
+    .act-info { flex: 1; min-width: 0; }
+
+    .act-title {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text);
+      transition: color 0.2s, text-decoration 0.2s;
+      line-height: 1.4;
+    }
+
+    .activity-row.done .act-title {
+      color: var(--muted);
+      text-decoration: line-through;
+      text-decoration-color: #A0ADB8;
+    }
+
+    .act-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 5px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.6;
+      white-space: nowrap;
+    }
+
+    .b-sap      { background: #DCEEFF; color: #0D4F9A; }
+    .b-google   { background: #FCE8EC; color: #B71C1C; }
+    .b-microsoft{ background: #E3F4E8; color: #1B5E20; }
+    .b-personal { background: #FFF3E0; color: #BF360C; }
+    .b-dur      { background: #F3F4F6; color: #4B5563; }
+    .b-free     { background: #D1FAE5; color: #065F46; }
+
+    /* ── Open Link Button ───────────────────────────────────── */
+    .act-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 13px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: opacity 0.15s, transform 0.15s;
+      border: 1.5px solid transparent;
+    }
+
+    .act-link:hover { opacity: 0.82; transform: translateY(-1px); }
+    .act-link:active { transform: translateY(0); }
+
+    .act-exercise {
+      padding: 6px 13px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      flex-shrink: 0;
+      background: #F9FAFB;
+      color: #9CA3AF;
+      border: 1.5px solid #E5E7EB;
+      cursor: default;
+    }
+
+    /* ── Checkpoint Box ──────────────────────────────────────── */
+    .checkpoint {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 13px 16px;
+      border-radius: 9px;
+      margin-top: 18px;
+      font-size: 13px;
+      line-height: 1.5;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .checkpoint.locked {
+      background: #F6F8FB;
+      border: 1.5px solid #DDE4EE;
+      color: var(--muted);
+    }
+
+    .checkpoint.unlocked {
+      background: var(--success-bg);
+      border: 1.5px solid var(--success-border);
+      color: var(--success-text);
+    }
+
+    .cp-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+    .cp-label { font-weight: 700; margin-bottom: 2px; }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    footer {
+      max-width: 1120px;
+      margin: 4px auto 40px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .footer-note { font-size: 11.5px; color: var(--muted); }
+    .footer-note strong { color: #4B5563; }
+
+    .reset-btn {
+      padding: 7px 16px;
+      background: white;
+      border: 1.5px solid #E0E5ED;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #7B8799;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .reset-btn:hover {
+      background: #FEE2E2;
+      border-color: #FCA5A5;
+      color: #B91C1C;
+    }
+
+    /* ── Submit Button ─────────────────────────────────────── */
+    .submit-btn {
+      padding: 9px 22px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.1s;
+    }
+
+    .submit-btn.saved {
+      background: #E5E7EB;
+      color: #9CA3AF;
+      cursor: default;
+    }
+
+    .submit-btn.dirty {
+      background: linear-gradient(135deg, #0C3B6E, #1A6FD8);
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(26,111,216,0.40);
+      animation: pulse-btn 1.8s ease-in-out infinite;
+    }
+
+    .submit-btn.dirty:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 14px rgba(26,111,216,0.50);
+    }
+
+    .submit-btn.dirty:active { transform: translateY(0); }
+
+    @keyframes pulse-btn {
+      0%, 100% { box-shadow: 0 3px 10px rgba(26,111,216,0.40); }
+      50%       { box-shadow: 0 3px 18px rgba(26,111,216,0.70); }
+    }
+
+    /* ── Unsaved indicator ─────────────────────────────────── */
+    .unsaved-badge {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      background: #FEF9C3;
+      border: 1px solid #FDE047;
+      color: #854D0E;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+
+    .unsaved-badge.visible { display: inline-flex; }
+
+    .unsaved-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #EAB308;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.25; }
+    }
+
+    /* ── Toast ─────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1A5C38;
+      color: #fff;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Confetti Banner ─────────────────────────────────────── */
+    #finish-banner {
+      display: none;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .finish-inner {
+      background: linear-gradient(135deg, #0C3B6E, #1A6FD8);
+      color: white;
+      border-radius: 14px;
+      padding: 22px 28px;
+      text-align: center;
+    }
+
+    .finish-inner h2 { font-size: 20px; margin-bottom: 6px; }
+    .finish-inner p  { font-size: 13.5px; opacity: 0.85; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .header-top { flex-direction: column; }
+      .act-title  { font-size: 13px; }
+      .act-link, .act-exercise { padding: 5px 10px; font-size: 11.5px; }
+      .week-header { flex-direction: column; align-items: flex-start; }
+      .week-right  { align-items: flex-start; }
+      main         { margin-top: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     STICKY HEADER
+═══════════════════════════════════════════════════════════ -->
+<header id="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="header-brand">
+        <div class="brand-icon">🎯</div>
+        <div>
+          <div class="brand-title">AI Champion Learning Plan</div>
+          <div class="brand-sub">Architecture Advisor · Automotive Industry · 4 Weeks · 100% Free Resources</div>
+        </div>
+      </div>
+      <div class="header-stats">
+        <div class="stat-pill"><strong id="hdr-done">0</strong> / <span id="hdr-total">33</span> activities done</div>
+        <div class="stat-pill">~<strong>40–50 hrs</strong> total</div>
+      </div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-label">Overall Progress</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="prog-pct" id="prog-pct">0%</div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════════════════ -->
+<main id="main"></main>
+
+<!-- Finish Banner -->
+<div id="finish-banner">
+  <div class="finish-inner">
+    <h2>🏆 Congratulations — AI Champion Plan Complete!</h2>
+    <p>You've completed all 33 activities across 4 weeks. You're now ready to be an AI evangelist for your automotive customers.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-note">
+    💾 Progress saved locally in your browser &nbsp;·&nbsp;
+    Last saved: <strong id="last-saved">—</strong>
+    &nbsp;&nbsp;<span class="unsaved-badge" id="unsaved-badge"><span class="unsaved-dot"></span> Unsaved changes</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <button class="reset-btn" onclick="confirmReset()">↺ Reset All Progress</button>
+    <button class="submit-btn saved" id="submit-btn" onclick="submitProgress()">✓ Progress Saved</button>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   PLAN DATA
+═══════════════════════════════════════════════════════════ */
+const STORAGE_KEY = 'aiChampionPlan_v2';
+
+/* pending = in-memory working copy; state = last persisted snapshot */
+let pending = {};
+let isDirty  = false;
+
+const PLAN = [
+  /* ─── WEEK 1 ─── */
+  {
+    week: 1,
+    title: 'AI & GenAI Foundations',
+    goal: 'Build a solid conceptual baseline before going into SAP-specific content.',
+    checkpoint: 'You can explain what Gen AI is, how LLMs work, and articulate SAP\'s Business AI strategy and ethics framework to a customer.',
+    color: '#1565C0', light: '#EBF3FF', mid: '#BBDEFB',
+    days: [
+      {
+        day: 1, label: 'Day 1', weekday: 'Monday',
+        activities: [
+          { id:'w1d1a1', title:'Google: Introduction to Generative AI', dur:'45 min', prov:'Google', link:'https://www.skills.google/course_templates/536' },
+          { id:'w1d1a2', title:'Google: Introduction to Large Language Models', dur:'45 min', prov:'Google', link:'https://cloud.google.com/learn/training/machinelearning-ai' },
+          { id:'w1d1a3', title:'Google: Introduction to Responsible AI', dur:'45 min', prov:'Google', link:'https://cloud.google.com/learn/training/machinelearning-ai' },
+        ]
+      },
+      {
+        day: 2, label: 'Day 2', weekday: 'Tuesday',
+        activities: [
+          { id:'w1d2a1', title:'Microsoft: Generative AI for Beginners — Lessons 1–6 (free GitHub course)', dur:'2.5 hrs', prov:'Microsoft', link:'https://github.com/microsoft/generative-ai-for-beginners' },
+        ]
+      },
+      {
+        day: 3, label: 'Day 3', weekday: 'Wednesday',
+        activities: [
+          { id:'w1d3a1', title:'SAP: Introducing AI Fundamentals — Units 1 & 2', dur:'70 min', prov:'SAP', link:'https://learning.sap.com/courses/introducing-ai-fundamentals' },
+          { id:'w1d3a2', title:'SAP: Generative AI at SAP (course module)', dur:'50 min', prov:'SAP', link:'https://learning.sap.com/artificial-intelligence' },
+        ]
+      },
+      {
+        day: 4, label: 'Day 4', weekday: 'Thursday',
+        activities: [
+          { id:'w1d4a1', title:'SAP: Introducing AI Fundamentals — Units 3 & 4', dur:'75 min', prov:'SAP', link:'https://learning.sap.com/courses/introducing-ai-fundamentals' },
+          { id:'w1d4a2', title:'SAP Responsible AI — deep read (ethics, governance, EU AI Act alignment)', dur:'45 min', prov:'SAP', link:'https://www.sap.com/products/artificial-intelligence/ai-ethics.html' },
+        ]
+      },
+      {
+        day: 5, label: 'Day 5', weekday: 'Friday',
+        activities: [
+          { id:'w1d5a1', title:'SAP: Exploring the SAP Business AI Portfolio — earns digital badge', dur:'2 hrs', prov:'SAP', link:'https://learning.sap.com/courses/discovering-sap-business-ai-1' },
+        ]
+      },
+    ]
+  },
+
+  /* ─── WEEK 2 ─── */
+  {
+    week: 2,
+    title: 'SAP AI Platform: Joule, GenAI Hub & AI Core',
+    goal: 'Understand the full SAP AI technology stack and get hands-on experience with the GenAI Hub and AI Core.',
+    checkpoint: 'You understand how Joule, AI Core, and the GenAI Hub fit together and can explain the SAP AI technology stack to a technical audience.',
+    color: '#276E35', light: '#EAF7EE', mid: '#C8E6C9',
+    days: [
+      {
+        day: 6, label: 'Day 6', weekday: 'Monday',
+        activities: [
+          { id:'w2d6a1', title:'SAP: Discovering SAP\'s Generative AI Hub', dur:'80 min', prov:'SAP', link:'https://learning.sap.com/courses/discovering-sap-s-generative-ai-hub' },
+          { id:'w2d6a2', title:'SAP: Getting Started with GenAI Hub (hands-on unit)', dur:'40 min', prov:'SAP', link:'https://learning.sap.com/courses/solve-your-business-problems-using-prompts-and-llms-in-sap-generative-ai-hub/getting-started-with-generative-ai-hub' },
+        ]
+      },
+      {
+        day: 7, label: 'Day 7', weekday: 'Tuesday',
+        activities: [
+          { id:'w2d7a1', title:'SAP: Solving Business Problems Using Prompts & LLMs in GenAI Hub', dur:'2 hrs', prov:'SAP', link:'https://learning.sap.com/artificial-intelligence' },
+        ]
+      },
+      {
+        day: 8, label: 'Day 8', weekday: 'Wednesday',
+        activities: [
+          { id:'w2d8a1', title:'SAP: Using Advanced AI Techniques with SAP\'s GenAI Hub', dur:'40 min', prov:'SAP', link:'https://learning.sap.com/courses/using-advance-ai-techniques-with-sap-s-generative-ai-hub' },
+          { id:'w2d8a2', title:'SAP Developer Tutorial: Set Up GenAI Hub in SAP AI Core (hands-on)', dur:'90 min', prov:'SAP', link:'https://developers.sap.com/tutorials/ai-core-genaihub-provisioning' },
+        ]
+      },
+      {
+        day: 9, label: 'Day 9', weekday: 'Thursday',
+        activities: [
+          { id:'w2d9a1', title:'SAP: Introduction to AI Core — Units 1 & 2 (model training, inferencing)', dur:'110 min', prov:'SAP', link:'https://learning.sap.com/courses/introduction-to-ai-core' },
+        ]
+      },
+      {
+        day: 10, label: 'Day 10', weekday: 'Friday',
+        activities: [
+          { id:'w2d10a1', title:'SAP: Introduction to AI Core — Unit 3 (model serving & governance)', dur:'55 min', prov:'SAP', link:'https://learning.sap.com/courses/introduction-to-ai-core' },
+          { id:'w2d10a2', title:'SAP Joule Community Page — read overview & watch intro videos', dur:'60 min', prov:'SAP', link:'https://pages.community.sap.com/topics/joule' },
+        ]
+      },
+    ]
+  },
+
+  /* ─── WEEK 3 ─── */
+  {
+    week: 3,
+    title: 'Use Cases, Agentic AI & Automotive Industry',
+    goal: 'Learn to identify and design AI use cases, understand agentic AI, and build deep automotive industry AI knowledge.',
+    checkpoint: 'You can run a basic AI use case discovery conversation with a customer, cite 5 high-value automotive AI scenarios, and explain agentic AI in a business context.',
+    color: '#C15A00', light: '#FFF4E8', mid: '#FFE0B2',
+    days: [
+      {
+        day: 11, label: 'Day 11', weekday: 'Monday',
+        activities: [
+          { id:'w3d11a1', title:'SAP Learning Journey: Applying a Human-Centered Approach to Identify AI Use Cases — Part 1', dur:'2 hrs', prov:'SAP', link:'https://learning.sap.com/learning-journeys' },
+        ]
+      },
+      {
+        day: 12, label: 'Day 12', weekday: 'Tuesday',
+        activities: [
+          { id:'w3d12a1', title:'SAP Learning Journey: Applying a Human-Centered Approach to Identify AI Use Cases — Part 2', dur:'2 hrs', prov:'SAP', link:'https://learning.sap.com/learning-journeys' },
+        ]
+      },
+      {
+        day: 13, label: 'Day 13', weekday: 'Wednesday',
+        activities: [
+          { id:'w3d13a1', title:'SAP Learning Journey: Discovering High-Value Opportunities for Agentic AI', dur:'2 hrs', prov:'SAP', link:'https://learning.sap.com/learning-journeys' },
+        ]
+      },
+      {
+        day: 14, label: 'Day 14', weekday: 'Thursday',
+        activities: [
+          { id:'w3d14a1', title:'SAP: Describing SAP\'s Business AI for Automotive (supply chain, quality, manufacturing)', dur:'60 min', prov:'SAP', link:'https://learning.sap.com/browse/industries/automotive' },
+          { id:'w3d14a2', title:'SAP Discovery Center: AI Use Case Catalog — browse 240+ use cases', dur:'75 min', prov:'SAP', link:'https://discovery-center.cloud.sap/missionssearch' },
+        ]
+      },
+      {
+        day: 15, label: 'Day 15', weekday: 'Friday',
+        activities: [
+          { id:'w3d15a1', title:'SAP Article: What Is Autonomous Enterprise for Automotive?', dur:'30 min', prov:'SAP', link:'https://www.sap.com/resources/what-is-autonomous-enterprise-for-automotive' },
+          { id:'w3d15a2', title:'SAP Blog: Catena-X & SAP Quality Management in Automotive (BMW, Schaeffler)', dur:'30 min', prov:'SAP', link:'https://news.sap.com/2025/03/catena-x-sap-efficient-quality-management-automotive-industry/' },
+          { id:'w3d15a3', title:'Personal Exercise: Draft your Top 5 Automotive AI Use Cases with customer value statements', dur:'60 min', prov:'Personal', link:null },
+        ]
+      },
+    ]
+  },
+
+  /* ─── WEEK 4 ─── */
+  {
+    week: 4,
+    title: 'Architecture, Ethics & Evangelist Toolkit',
+    goal: 'Understand SAP AI architecture patterns and governance, then build a ready-to-use customer evangelism toolkit.',
+    checkpoint: 'You can explain SAP\'s AI architecture to technical customers, articulate governance and responsible AI, and you have a ready-to-use customer pitch and workshop template.',
+    color: '#5C1B8A', light: '#F5EDFF', mid: '#E1BEE7',
+    days: [
+      {
+        day: 16, label: 'Day 16', weekday: 'Monday',
+        activities: [
+          { id:'w4d16a1', title:'SAP: Putting AI Ethics Into Practice (course — 10 AI ethics principles in depth)', dur:'60 min', prov:'SAP', link:'https://learning.sap.com/artificial-intelligence' },
+          { id:'w4d16a2', title:'SAP Blog: Responsible AI — Principles to Practice (security, EU AI Act, governance)', dur:'60 min', prov:'SAP', link:'https://community.sap.com/t5/human-capital-management-blog-posts-by-sap/principles-to-practice-securing-sap-business-ai/ba-p/14090586' },
+        ]
+      },
+      {
+        day: 17, label: 'Day 17', weekday: 'Tuesday',
+        activities: [
+          { id:'w4d17a1', title:'SAP Architecture: Generative AI on SAP BTP — Reference Architecture (CAP, HANA Cloud, RAG)', dur:'90 min', prov:'SAP', link:'https://architecture.learning.sap.com/docs/ref-arch/39eb58' },
+          { id:'w4d17a2', title:'SAP Architecture: AI Golden Path — Decision Framework (when to use ML vs LLM vs Agents)', dur:'45 min', prov:'SAP', link:'https://architecture.learning.sap.com/docs/ai-golden-path' },
+        ]
+      },
+      {
+        day: 18, label: 'Day 18', weekday: 'Wednesday',
+        activities: [
+          { id:'w4d18a1', title:'SAP Architecture: Agentic AI & AI Agents — Reference Architecture (Joule Studio, patterns)', dur:'90 min', prov:'SAP', link:'https://architecture.learning.sap.com/docs/ref-arch/98efa0' },
+          { id:'w4d18a2', title:'SAP BTP AI Best Practices — Technical View (prompt templates, RAG, data masking, filtering)', dur:'60 min', prov:'SAP', link:'https://btp-ai-bp.docs.sap/docs/technical-view' },
+        ]
+      },
+      {
+        day: 19, label: 'Day 19', weekday: 'Thursday',
+        activities: [
+          { id:'w4d19a1', title:'Hands-On: SAP BTP Free Trial — Explore GenAI Hub Playground (run real prompts, test LLMs)', dur:'2.5 hrs', prov:'SAP', link:'https://developers.sap.com/ai/' },
+        ]
+      },
+      {
+        day: 20, label: 'Day 20', weekday: 'Friday',
+        activities: [
+          { id:'w4d20a1', title:'Build Evangelist Toolkit: Automotive AI Customer Pitch (1-pager) + Discovery Workshop Agenda', dur:'2.5 hrs', prov:'Personal', link:null },
+        ]
+      },
+    ]
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+let state = {};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = JSON.parse(raw);
+  } catch(_) { state = {}; }
+  /* seed working copy from persisted state */
+  pending  = Object.assign({}, state);
+  isDirty  = false;
+}
+
+function saveState() {
+  /* copy working copy into persistent state */
+  const ts = new Date().toISOString();
+  state = Object.assign({}, pending, { __ts: ts });
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(_) {}
+  isDirty = false;
+  refreshLastSaved();
+  updateSubmitBtn();
+}
+
+function refreshLastSaved() {
+  const el = document.getElementById('last-saved');
+  if (!el) return;
+  if (state.__ts) {
+    const d = new Date(state.__ts);
+    el.textContent = d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' })
+      + ' ' + d.toLocaleTimeString(undefined, { hour:'2-digit', minute:'2-digit' });
+  }
+}
+
+/* ── Dirty / submit helpers ────────────────────────────── */
+function markDirty() {
+  isDirty = true;
+  updateSubmitBtn();
+}
+
+function updateSubmitBtn() {
+  const btn    = document.getElementById('submit-btn');
+  const badge  = document.getElementById('unsaved-badge');
+  if (!btn) return;
+  if (isDirty) {
+    btn.textContent = '💾 Save Progress';
+    btn.className   = 'submit-btn dirty';
+    btn.disabled    = false;
+    if (badge) badge.classList.add('visible');
+  } else {
+    btn.textContent = '✓ Progress Saved';
+    btn.className   = 'submit-btn saved';
+    btn.disabled    = true;
+    if (badge) badge.classList.remove('visible');
+  }
+}
+
+function submitProgress() {
+  if (!isDirty) return;
+  saveState();
+  showToast('✓ Progress saved successfully!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════ */
+function allIds()    { return PLAN.flatMap(w => w.days.flatMap(d => d.activities.map(a => a.id))); }
+function weekIds(wn) { return PLAN.find(w => w.week === wn).days.flatMap(d => d.activities.map(a => a.id)); }
+
+function totalCount()        { return allIds().length; }
+function completedCount()    { return allIds().filter(id => !!pending[id]).length; }
+function weekTotal(wn)       { return weekIds(wn).length; }
+function weekCompleted(wn)   { return weekIds(wn).filter(id => !!pending[id]).length; }
+
+function provBadge(p) {
+  switch(p) {
+    case 'Google':    return 'b-google';
+    case 'Microsoft': return 'b-microsoft';
+    case 'SAP':       return 'b-sap';
+    case 'Personal':  return 'b-personal';
+    default:          return 'b-sap';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOGGLE
+═══════════════════════════════════════════════════════════ */
+function toggle(id) {
+  pending[id] = !pending[id];
+  markDirty();
+  const row = document.getElementById('row-' + id);
+  if (row) row.classList.toggle('done', !!pending[id]);
+  refreshAllProgress();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROGRESS REFRESH
+═══════════════════════════════════════════════════════════ */
+function refreshAllProgress() {
+  const done  = completedCount();
+  const total = totalCount();
+  const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  document.getElementById('hdr-done').textContent  = done;
+  document.getElementById('hdr-total').textContent = total;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent  = pct + '%';
+
+  PLAN.forEach(w => {
+    const wDone  = weekCompleted(w.week);
+    const wTotal = weekTotal(w.week);
+    const wPct   = wTotal > 0 ? Math.round((wDone / wTotal) * 100) : 0;
+
+    const badge = document.getElementById('wbadge-' + w.week);
+    if (badge) badge.textContent = wDone + ' / ' + wTotal + ' done';
+
+    const fill = document.getElementById('wfill-' + w.week);
+    if (fill) fill.style.width = wPct + '%';
+
+    const cp = document.getElementById('cp-' + w.week);
+    if (cp) {
+      const allDone = wDone === wTotal;
+      cp.className = 'checkpoint ' + (allDone ? 'unlocked' : 'locked');
+      cp.innerHTML = `
+        <span class="cp-icon">${allDone ? '✅' : '🔒'}</span>
+        <div>
+          <div class="cp-label">${allDone ? '🎉 Week ' + w.week + ' Checkpoint Achieved!' : 'Week ' + w.week + ' Checkpoint (unlocks when all activities are done)'}</div>
+          ${w.checkpoint}
+        </div>`;
+    }
+  });
+
+  // Finish banner
+  const fb = document.getElementById('finish-banner');
+  if (fb) fb.style.display = (done === total && total > 0) ? 'block' : 'none';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════ */
+function render() {
+  const main = document.getElementById('main');
+  let html = '';
+
+  /* ── Week cards ── */
+  PLAN.forEach(w => {
+    const wDone  = weekCompleted(w.week);
+    const wTotal = weekTotal(w.week);
+    const wPct   = wTotal > 0 ? Math.round((wDone / wTotal) * 100) : 0;
+    const cpDone = wDone === wTotal;
+
+    html += `
+      <div class="week-card">
+
+        <!-- Week header -->
+        <div class="week-header" style="background:${w.color};">
+          <div class="week-header-left">
+            <div class="week-num-badge">W${w.week}</div>
+            <div>
+              <div class="week-label">Week ${w.week}</div>
+              <div class="week-title">${w.title}</div>
+            </div>
+          </div>
+          <div class="week-right">
+            <div class="week-done-badge" id="wbadge-${w.week}">${wDone} / ${wTotal} done</div>
+            <div class="week-mini-track">
+              <div class="week-mini-fill" id="wfill-${w.week}" style="width:${wPct}%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Goal -->
+        <div class="goal-strip" style="background:${w.light}; border-left:3px solid ${w.color}; margin:16px 22px 0;">
+          <span class="goal-icon">🎯</span>
+          <div class="goal-text"><strong>Goal:</strong> ${w.goal}</div>
+        </div>
+
+        <!-- Days + Activities -->
+        <div class="week-body">`;
+
+    w.days.forEach(d => {
+      html += `
+          <div class="day-section">
+            <div class="day-header">
+              <span class="day-pill" style="background:${w.color};">${d.label}</span>
+              <span class="day-weekday">${d.weekday}</span>
+            </div>`;
+
+      d.activities.forEach(a => {
+        const isDone = !!pending[a.id];
+        const provCls = provBadge(a.prov);
+        const linkEl = a.link
+          ? `<a class="act-link"
+               style="background:${w.light}; color:${w.color}; border-color:${w.mid};"
+               href="${a.link}" target="_blank" rel="noopener noreferrer"
+               onclick="event.stopPropagation()">↗ Open</a>`
+          : `<span class="act-exercise">📝 Exercise</span>`;
+
+        html += `
+            <div class="activity-row${isDone ? ' done' : ''}" id="row-${a.id}" onclick="toggle('${a.id}')">
+              <div class="cb"><span class="cb-tick">✓</span></div>
+              <div class="act-info">
+                <div class="act-title">${a.title}</div>
+                <div class="act-badges">
+                  <span class="badge ${provCls}">${a.prov}</span>
+                  <span class="badge b-dur">⏱ ${a.dur}</span>
+                  <span class="badge b-free">✓ Free</span>
+                </div>
+              </div>
+              ${linkEl}
+            </div>`;
+      });
+
+      html += `</div>`;
+    });
+
+    /* Checkpoint */
+    html += `
+          <div class="checkpoint ${cpDone ? 'unlocked' : 'locked'}" id="cp-${w.week}">
+            <span class="cp-icon">${cpDone ? '✅' : '🔒'}</span>
+            <div>
+              <div class="cp-label">${cpDone ? '🎉 Week ' + w.week + ' Checkpoint Achieved!' : 'Week ' + w.week + ' Checkpoint (unlocks when all activities are done)'}</div>
+              ${w.checkpoint}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  main.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET
+═══════════════════════════════════════════════════════════ */
+function confirmReset() {
+  if (!confirm('Reset all progress? This will clear all checked activities and cannot be undone.')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(_) {}
+  state   = {};
+  pending = {};
+  isDirty = false;
+  render();
+  refreshAllProgress();
+  updateSubmitBtn();
+  document.getElementById('last-saved').textContent = '—';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOOT
+═══════════════════════════════════════════════════════════ */
+loadState();
+render();
+refreshAllProgress();
+refreshLastSaved();
+updateSubmitBtn();
+</script>
+
+</body>
+</html>
